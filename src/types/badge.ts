@@ -1,4 +1,5 @@
 export interface BadgeData {
+  id: string;
   fullName: string;
   jobTitle: string;
   employeeId: string;
@@ -19,6 +20,7 @@ export interface BadgeData {
   backgroundUrl: string;
   companyEmail: string;
   companyPhone: string;
+  employeePhone?: string;
 }
 
 export type BadgeOrientation = 'vertical' | 'horizontal';
@@ -38,4 +40,4 @@ export interface BadgeSettings {
   borderStyle: 'titanium' | 'minimal' | 'cyan-glow';
 }
 
-export type PrintLayoutMode = 'single-cr80' | 'sheet-duplex' | 'sheet-multi';
+export type PrintLayoutMode = 'single-cr80' | 'sheet-duplex' | 'sheet-multi' | 'sheet-all-employees';

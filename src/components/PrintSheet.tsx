@@ -2,11 +2,12 @@ import React from 'react';
 import { BadgeData, BadgeSettings, PrintLayoutMode } from '../types/badge';
 import { BadgeFront } from './BadgeFront';
 import { BadgeBack } from './BadgeBack';
-import { Printer, Scissors, Info } from 'lucide-react';
+import { Printer, Scissors, Info, Users } from 'lucide-react';
 
 interface PrintSheetProps {
   data: BadgeData;
   settings: BadgeSettings;
+  allEmployees?: BadgeData[];
   layoutMode: PrintLayoutMode;
   onLayoutModeChange: (mode: PrintLayoutMode) => void;
   showCropMarks: boolean;
@@ -19,6 +20,7 @@ interface PrintSheetProps {
 export const PrintSheet: React.FC<PrintSheetProps> = ({
   data,
   settings,
+  allEmployees = [],
   layoutMode,
   onLayoutModeChange,
   showCropMarks,
@@ -45,8 +47,23 @@ export const PrintSheet: React.FC<PrintSheetProps> = ({
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            Frente y Reverso (Doblado / Laminado)
+            Frente y Reverso ({data.fullName.split(' ')[0]})
           </button>
+          
+          {allEmployees.length > 1 && (
+            <button
+              onClick={() => onLayoutModeChange('sheet-all-employees')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                layoutMode === 'sheet-all-employees'
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'bg-slate-800 text-cyan-300 hover:bg-slate-700 border border-cyan-500/30'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Imprimir Lote ({allEmployees.length} Empleados)</span>
+            </button>
+          )}
+
           <button
             onClick={() => onLayoutModeChange('single-cr80')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -83,7 +100,7 @@ export const PrintSheet: React.FC<PrintSheetProps> = ({
 
           <button
             onClick={onTriggerPrint}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/25 transition-all transform active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/25 transition-all transform active:scale-95 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir Credencial</span>
@@ -114,8 +131,65 @@ export const PrintSheet: React.FC<PrintSheetProps> = ({
           {layoutMode !== 'single-cr80' && (
             <div className="text-center pb-4 mb-4 border-b border-slate-200 print:hidden">
               <span className="text-[11px] font-mono tracking-wider text-slate-500 uppercase">
-                Plantilla de Impresión CR80 · SUPRO México · {data.fullName} (ID: {data.employeeId})
+                Plantilla de Impresión CR80 · SUPRO México ·{' '}
+                {layoutMode === 'sheet-all-employees'
+                  ? `Lote de ${allEmployees.length} Credenciales`
+                  : `${data.fullName} (ID: ${data.employeeId})`}
               </span>
+            </div>
+          )}
+
+          {/* BATCH ALL EMPLOYEES MODE: Prints both Israel and José Alberto with duplex fold */}
+          {layoutMode === 'sheet-all-employees' && (
+            <div className="flex flex-col items-center space-y-8">
+              {allEmployees.map((emp, index) => (
+                <div
+                  key={emp.id || index}
+                  className="relative p-6 inline-block bg-slate-50 border border-slate-200 rounded print:border-none print:bg-transparent print:p-2 print:break-inside-avoid"
+                >
+                  {/* Crop marks at corners */}
+                  {showCropMarks && (
+                    <>
+                      <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-slate-800 pointer-events-none" />
+                      <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-slate-800 pointer-events-none" />
+                      <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-slate-800 pointer-events-none" />
+                      <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-slate-800 pointer-events-none" />
+                    </>
+                  )}
+
+                  <div className="no-print text-xs font-bold text-slate-700 mb-2 flex items-center justify-between border-b border-slate-300 pb-1">
+                    <span>{emp.fullName} · ID: {emp.employeeId}</span>
+                    <span className="text-cyan-700 font-mono text-[10px]">Credencial #{index + 1}</span>
+                  </div>
+
+                  <div className={`flex items-center gap-6 ${isVertical ? 'flex-row' : 'flex-col'}`}>
+                    {/* Front */}
+                    <div className="relative">
+                      <span className="no-print text-[10px] font-mono text-slate-500 block text-center mb-1">
+                        ANVERSO (FRENTE)
+                      </span>
+                      <BadgeFront data={emp} settings={settings} isPrintMode={true} />
+                    </div>
+
+                    {/* Central Fold or Cut Line */}
+                    <div className={`flex items-center justify-center ${isVertical ? 'flex-col h-[538px] px-2' : 'w-[538px] py-2'}`}>
+                      <div className={`${isVertical ? 'w-px h-full border-r border-dashed border-slate-400' : 'h-px w-full border-b border-dashed border-slate-400'}`} />
+                      <span className="text-[9px] font-mono text-slate-400 bg-white px-1 py-0.5 whitespace-nowrap">
+                        Doble / Corte
+                      </span>
+                      <div className={`${isVertical ? 'w-px h-full border-r border-dashed border-slate-400' : 'h-px w-full border-b border-dashed border-slate-400'}`} />
+                    </div>
+
+                    {/* Back */}
+                    <div className="relative">
+                      <span className="no-print text-[10px] font-mono text-slate-500 block text-center mb-1">
+                        REVERSO (ATRÁS)
+                      </span>
+                      <BadgeBack data={emp} settings={settings} isPrintMode={true} />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -126,13 +200,9 @@ export const PrintSheet: React.FC<PrintSheetProps> = ({
                 {/* Crop marks at corners */}
                 {showCropMarks && (
                   <>
-                    {/* Top-Left */}
                     <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-slate-800 pointer-events-none" />
-                    {/* Top-Right */}
                     <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-slate-800 pointer-events-none" />
-                    {/* Bottom-Left */}
                     <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-slate-800 pointer-events-none" />
-                    {/* Bottom-Right */}
                     <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-slate-800 pointer-events-none" />
                   </>
                 )}

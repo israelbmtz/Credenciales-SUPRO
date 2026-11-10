@@ -225,6 +225,18 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
           </div>
         </div>
 
+        {/* Employee Phone */}
+        <div>
+          <label className="text-[11px] text-slate-400 block mb-1">Teléfono del Empleado:</label>
+          <input
+            type="text"
+            value={data.employeePhone || ''}
+            onChange={(e) => onUpdateData({ employeePhone: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-cyan-400 transition-colors"
+            placeholder="55 5402 5792"
+          />
+        </div>
+
         {/* Company Contact (Email & Phone for lost card notice) */}
         <div className="grid grid-cols-2 gap-3">
           <div>

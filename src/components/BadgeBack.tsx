@@ -21,6 +21,13 @@ export const BadgeBack: React.FC<BadgeBackProps> = ({
     data.fullName
   )}&role=${encodeURIComponent(data.jobTitle)}`;
 
+  const signatureName = (() => {
+    const parts = (data.fullName || '').trim().split(/\s+/);
+    if (parts.length <= 1) return data.fullName;
+    if (parts.length === 2) return `${parts[0]} ${parts[1]}`;
+    return `${parts.slice(0, parts.length - 1).join(' ')} ${parts[parts.length - 1][0]}.`;
+  })();
+
   if (isVertical) {
     return (
       <div
@@ -103,7 +110,7 @@ export const BadgeBack: React.FC<BadgeBackProps> = ({
             <div className="flex-1 flex flex-col justify-between h-full pl-1">
               <div className="border-b border-dashed border-slate-600 pb-1 pt-2">
                 <div className="font-serif italic text-cyan-200 text-[10px] text-center tracking-wide">
-                  Israel Balderas M.
+                  {signatureName}
                 </div>
               </div>
               <span className="text-[7px] text-slate-400 text-center uppercase tracking-wider block mt-0.5">
@@ -193,7 +200,7 @@ export const BadgeBack: React.FC<BadgeBackProps> = ({
           </div>
 
           <div className="border-t border-dashed border-slate-700 pt-1 text-center">
-            <span className="font-serif italic text-cyan-200 text-[10px] block">Israel Balderas M.</span>
+            <span className="font-serif italic text-cyan-200 text-[10px] block">{signatureName}</span>
             <span className="text-[6.5px] text-slate-400 uppercase tracking-wider block">Firma del Titular</span>
           </div>
         </div>
