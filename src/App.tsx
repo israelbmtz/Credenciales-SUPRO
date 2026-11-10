@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { BadgeData, BadgeSettings, PrintLayoutMode } from './types/badge';
 import { Badge3DViewer } from './components/Badge3DViewer';
+import { BadgeFront } from './components/BadgeFront';
+import { BadgeBack } from './components/BadgeBack';
 import { PrintSheet } from './components/PrintSheet';
 import { BadgeEditor } from './components/BadgeEditor';
 import { VerificationModal } from './components/VerificationModal';
@@ -26,7 +28,7 @@ const PRESET_EMPLOYEES: BadgeData[] = [
     bloodType: '',
     emergencyContact: '',
     emergencyPhone: '',
-    curp: 'BAMI880919HDFR02',
+    curp: 'BAMI860619HDFLRS02',
     issueDate: '2026',
     expiryDate: '2028',
     authorizedBy: 'Dirección General de Operaciones',
@@ -50,7 +52,7 @@ const PRESET_EMPLOYEES: BadgeData[] = [
     bloodType: '',
     emergencyContact: '',
     emergencyPhone: '',
-    curp: 'GABA891017HDFR05',
+    curp: 'GABA870121HDFRRL01',
     issueDate: '2026',
     expiryDate: '2028',
     authorizedBy: 'Dirección General de Operaciones',
@@ -78,10 +80,60 @@ const INITIAL_SETTINGS: BadgeSettings = {
   borderStyle: 'titanium',
 };
 
+const STORAGE_KEY = 'supro_badges_data_v4';
+const SETTINGS_KEY = 'supro_badges_settings_v4';
+
 export default function App() {
-  const [employees, setEmployees] = useState<BadgeData[]>(PRESET_EMPLOYEES);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(PRESET_EMPLOYEES[1].id); // Select José Alberto or toggle
-  const [settings, setSettings] = useState<BadgeSettings>(INITIAL_SETTINGS);
+  const [employees, setEmployees] = useState<BadgeData[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Storage read error', e);
+    }
+    return PRESET_EMPLOYEES;
+  });
+
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('supro_selected_id');
+      if (saved) return saved;
+    } catch {}
+    return PRESET_EMPLOYEES[1].id;
+  });
+
+  const [settings, setSettings] = useState<BadgeSettings>(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return INITIAL_SETTINGS;
+  });
+
+  // Auto-persist whenever employees or settings change
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
+    } catch (e) {
+      console.warn('Storage save error', e);
+    }
+  }, [employees]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {}
+  }, [settings]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('supro_selected_id', selectedEmployeeId);
+    } catch {}
+  }, [selectedEmployeeId]);
+
   const [activeTab, setActiveTab] = useState<'preview' | 'print'>('preview');
   const [printLayoutMode, setPrintLayoutMode] = useState<PrintLayoutMode>('sheet-duplex');
   const [showCropMarks, setShowCropMarks] = useState<boolean>(true);
@@ -92,6 +144,8 @@ export default function App() {
 
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
+  const exportFrontRef = useRef<HTMLDivElement>(null);
+  const exportBackRef = useRef<HTMLDivElement>(null);
 
   const currentEmployee =
     employees.find((e) => e.id === selectedEmployeeId) || employees[0];
@@ -102,6 +156,17 @@ export default function App() {
         emp.id === currentEmployee.id ? { ...emp, ...newData } : emp
       )
     );
+  };
+
+  const handleSaveNow = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      localStorage.setItem('supro_selected_id', selectedEmployeeId);
+      showToast(`¡Cambios de "${currentEmployee.fullName}" guardados permanentemente!`);
+    } catch {
+      showToast('Error al guardar en el almacenamiento local');
+    }
   };
 
   const handleSelectEmployee = (id: string) => {
@@ -169,45 +234,85 @@ export default function App() {
     }, 150);
   };
 
+  const triggerDownload = (dataUrl: string, filename: string) => {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+    }, 200);
+  };
+
   const handleExportPng = async (side: 'front' | 'back' | 'both') => {
     setIsExporting(true);
     showToast('Generando imagen en alta resolución 300 DPI...');
 
     try {
-      if (side === 'front' && frontRef.current) {
-        const dataUrl = await toPng(frontRef.current, { pixelRatio: 3, quality: 0.98 });
-        const link = document.createElement('a');
-        link.download = `Credencial_SUPRO_${currentEmployee.employeeId}_Anverso.png`;
-        link.href = dataUrl;
-        link.click();
-        showToast('Anverso descargado con éxito');
-      } else if (side === 'back' && backRef.current) {
-        const dataUrl = await toPng(backRef.current, { pixelRatio: 3, quality: 0.98 });
-        const link = document.createElement('a');
-        link.download = `Credencial_SUPRO_${currentEmployee.employeeId}_Reverso.png`;
-        link.href = dataUrl;
-        link.click();
-        showToast('Reverso descargado con éxito');
+      if (document.fonts) {
+        try {
+          await document.fonts.ready;
+        } catch {}
+      }
+
+      // Small delay to ensure rendering of export nodes
+      await new Promise((resolve) => setTimeout(resolve, 80));
+
+      const safeEmployeeId = (currentEmployee.employeeId || 'ID').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const safeName = (currentEmployee.fullName || 'Empleado')
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+
+      if (side === 'front') {
+        const targetNode = exportFrontRef.current;
+        if (!targetNode) throw new Error('Nodo de anverso no listo');
+
+        const dataUrl = await toPng(targetNode, {
+          pixelRatio: 2.5,
+          quality: 0.98,
+          backgroundColor: '#020617',
+          cacheBust: false,
+        });
+        triggerDownload(dataUrl, `Credencial_SUPRO_${safeEmployeeId}_${safeName}_Anverso.png`);
+        showToast('¡Anverso descargado con éxito!');
+      } else if (side === 'back') {
+        const targetNode = exportBackRef.current;
+        if (!targetNode) throw new Error('Nodo de reverso no listo');
+
+        const dataUrl = await toPng(targetNode, {
+          pixelRatio: 2.5,
+          quality: 0.98,
+          backgroundColor: '#0f172a',
+          cacheBust: false,
+        });
+        triggerDownload(dataUrl, `Credencial_SUPRO_${safeEmployeeId}_${safeName}_Reverso.png`);
+        showToast('¡Reverso descargado con éxito!');
       } else if (side === 'both') {
-        if (frontRef.current) {
-          const frontUrl = await toPng(frontRef.current, { pixelRatio: 3 });
-          const linkF = document.createElement('a');
-          linkF.download = `Credencial_SUPRO_${currentEmployee.employeeId}_Frente.png`;
-          linkF.href = frontUrl;
-          linkF.click();
+        if (exportFrontRef.current) {
+          const frontUrl = await toPng(exportFrontRef.current, {
+            pixelRatio: 2.5,
+            quality: 0.98,
+            backgroundColor: '#020617',
+          });
+          triggerDownload(frontUrl, `Credencial_SUPRO_${safeEmployeeId}_${safeName}_Frente.png`);
         }
-        if (backRef.current) {
-          const backUrl = await toPng(backRef.current, { pixelRatio: 3 });
-          const linkB = document.createElement('a');
-          linkB.download = `Credencial_SUPRO_${currentEmployee.employeeId}_Atras.png`;
-          linkB.href = backUrl;
-          linkB.click();
+        await new Promise((r) => setTimeout(r, 250));
+        if (exportBackRef.current) {
+          const backUrl = await toPng(exportBackRef.current, {
+            pixelRatio: 2.5,
+            quality: 0.98,
+            backgroundColor: '#0f172a',
+          });
+          triggerDownload(backUrl, `Credencial_SUPRO_${safeEmployeeId}_${safeName}_Atras.png`);
         }
-        showToast('Ambas caras descargadas con éxito');
+        showToast('¡Ambas caras descargadas con éxito!');
       }
     } catch (err) {
       console.error('Export error:', err);
-      showToast('Error al generar la imagen. Intenta con Imprimir.');
+      showToast('Error al generar imagen PNG. Se recomienda la opción Imprimir.');
     } finally {
       setIsExporting(false);
     }
@@ -398,6 +503,7 @@ export default function App() {
                 onUpdateSettings={handleUpdateSettings}
                 onResetDefaults={handleResetDefaults}
                 onExportPng={handleExportPng}
+                onSaveNow={handleSaveNow}
                 isExporting={isExporting}
               />
             </div>
@@ -423,12 +529,30 @@ export default function App() {
         )}
       </main>
 
-      {/* Hidden container for rendering high-res export targets */}
-      <div className="sr-only opacity-0 pointer-events-none">
-        <div ref={frontRef as any}>
-          <div className="badge-card-print-vertical">
-            {/* Target for html-to-image */}
-          </div>
+      {/* Dedicated Off-Screen High-Resolution Export Target (Unconstrained by 3D transforms) */}
+      <div
+        style={{
+          position: 'fixed',
+          left: '-9999px',
+          top: '-9999px',
+          zIndex: -100,
+          pointerEvents: 'none',
+        }}
+        aria-hidden="true"
+      >
+        <div ref={exportFrontRef} style={{ display: 'inline-block' }}>
+          <BadgeFront
+            data={currentEmployee}
+            settings={{ ...settings, showHologram: false }}
+            isPrintMode={false}
+          />
+        </div>
+        <div ref={exportBackRef} style={{ display: 'inline-block' }}>
+          <BadgeBack
+            data={currentEmployee}
+            settings={{ ...settings, showHologram: false }}
+            isPrintMode={false}
+          />
         </div>
       </div>
 

@@ -22,6 +22,7 @@ interface BadgeEditorProps {
   onUpdateSettings: (newSettings: Partial<BadgeSettings>) => void;
   onResetDefaults: () => void;
   onExportPng: (side: 'front' | 'back' | 'both') => void;
+  onSaveNow?: () => void;
   isExporting: boolean;
 }
 
@@ -32,6 +33,7 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
   onUpdateSettings,
   onResetDefaults,
   onExportPng,
+  onSaveNow,
   isExporting,
 }) => {
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -68,14 +70,27 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onResetDefaults}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-400 hover:text-cyan-300 transition-colors bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60"
-          title="Restablecer datos originales"
-        >
-          <RotateCcw className="w-3 h-3" />
-          <span>Restablecer</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {onSaveNow && (
+            <button
+              onClick={onSaveNow}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-md transition-all active:scale-95"
+              title="Guardar cambios permanentemente"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Guardar</span>
+            </button>
+          )}
+
+          <button
+            onClick={onResetDefaults}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-400 hover:text-cyan-300 transition-colors bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60"
+            title="Restablecer datos originales"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Restablecer</span>
+          </button>
+        </div>
       </div>
 
       {/* Quick Action: Export HD PNGs */}
@@ -87,7 +102,7 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
           <button
             onClick={() => onExportPng('front')}
             disabled={isExporting}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Descargar Anverso</span>
@@ -95,12 +110,20 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
           <button
             onClick={() => onExportPng('back')}
             disabled={isExporting}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Descargar Reverso</span>
           </button>
         </div>
+        <button
+          onClick={() => onExportPng('both')}
+          disabled={isExporting}
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold bg-gradient-to-r from-cyan-600/30 to-blue-600/30 hover:from-cyan-600/40 hover:to-blue-600/40 text-cyan-200 border border-cyan-500/40 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+        >
+          <Download className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Descargar Ambas Caras (2 Archivos PNG)</span>
+        </button>
       </div>
 
       {/* Orientation & Format */}

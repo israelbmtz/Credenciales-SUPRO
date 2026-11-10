@@ -84,7 +84,7 @@ export const BadgeBack: React.FC<BadgeBackProps> = ({
           <div className="grid grid-cols-2 gap-2 text-[9px] bg-slate-950/80 p-2.5 rounded-lg border border-slate-800/80">
             <div className="space-y-0.5">
               <span className="text-[7.5px] text-slate-400 uppercase block font-mono">CURP / Registro:</span>
-              <span className="font-mono text-[8.5px] text-slate-200 font-semibold">{data.curp || 'BAMI880919HDFR...'}</span>
+              <span className="font-mono text-[8px] tracking-tight text-slate-200 font-semibold block">{data.curp}</span>
             </div>
 
             <div className="space-y-0.5">
@@ -174,8 +174,8 @@ export const BadgeBack: React.FC<BadgeBackProps> = ({
 
           <div className="grid grid-cols-2 gap-2 bg-slate-950/90 p-2 rounded-lg border border-slate-800 text-[8px]">
             <div>
-              <span className="text-slate-400 uppercase block font-mono">CURP / Registro:</span>
-              <span className="font-mono text-slate-200 font-semibold">{data.curp || 'BAMI880919HDFR...'}</span>
+              <span className="text-slate-400 uppercase block font-mono text-[7.5px]">CURP / Registro:</span>
+              <span className="font-mono text-slate-200 font-semibold block text-[8px] tracking-tight">{data.curp}</span>
             </div>
             <div>
               <span className="text-slate-400 uppercase block font-mono">Emisión / Vigencia:</span>

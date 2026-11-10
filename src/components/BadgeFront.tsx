@@ -61,7 +61,7 @@ export const BadgeFront: React.FC<BadgeFrontProps> = ({
             src={data.backgroundUrl}
             alt="Medical background"
             className="w-full h-full object-cover object-center opacity-45 mix-blend-screen scale-105"
-            crossOrigin="anonymous"
+            
           />
           {/* Gradients to ensure text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/50 to-slate-950/95" />
@@ -107,7 +107,7 @@ export const BadgeFront: React.FC<BadgeFrontProps> = ({
                 src={data.logoUrl}
                 alt={data.companyName}
                 className="max-h-full max-w-full object-contain filter contrast-125"
-                crossOrigin="anonymous"
+                
               />
             </div>
             
@@ -126,7 +126,7 @@ export const BadgeFront: React.FC<BadgeFrontProps> = ({
                     src={data.photoUrl}
                     alt={data.fullName}
                     className={`w-full h-full object-cover object-top ${getFilterClass()}`}
-                    crossOrigin="anonymous"
+                    
                   />
                   
                   {/* Subtle biometric scan overlay corner brackets */}
@@ -216,7 +216,7 @@ export const BadgeFront: React.FC<BadgeFrontProps> = ({
           src={data.backgroundUrl}
           alt="Medical background"
           className="w-full h-full object-cover object-right opacity-40 mix-blend-screen scale-105"
-          crossOrigin="anonymous"
+          
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-slate-950/90" />
         
@@ -252,7 +252,7 @@ export const BadgeFront: React.FC<BadgeFrontProps> = ({
               src={data.photoUrl}
               alt={data.fullName}
               className={`w-full h-full object-cover object-top ${getFilterClass()}`}
-              crossOrigin="anonymous"
+              
             />
             {settings.showHologram && (
               <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-300 to-fuchsia-400 border border-white/80 flex items-center justify-center shadow">
@@ -286,7 +286,7 @@ export const BadgeFront: React.FC<BadgeFrontProps> = ({
               src={data.logoUrl}
               alt={data.companyName}
               className="max-h-full max-w-full object-contain filter contrast-125"
-              crossOrigin="anonymous"
+              
             />
           </div>
           <div className="text-right">
