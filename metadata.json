@@ -1,0 +1,6 @@
+{
+  "name": "Credencial Corporativa SUPRO México - Impresión y Diseño",
+  "description": "Sistema de diseño, previsualización interactiva e impresión en tamaño estándar CR80 para credenciales médicas de SUPRO México (Israel Balderas Martínez - Proveedor Quirúrgico).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
